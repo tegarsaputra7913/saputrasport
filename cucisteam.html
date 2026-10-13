@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir Cuci Steam</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #1e3a8a;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #1d4ed8;
+            border-bottom: 2px solid #eff6ff;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-print {
+            background-color: #059669;
+            margin-top: 10px;
+        }
+
+        .btn-print:hover {
+            background-color: #047857;
+        }
+
+        /* Struk / Preview */
+        .receipt-box {
+            border: 1px dashed #94a3b8;
+            padding: 15px;
+            background-color: #fffbeb;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .receipt-total {
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .total-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        /* Khusus Cetak Struk */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receiptArea, #receiptArea * {
+                visibility: visible;
+            }
+            #receiptArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .btn-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1> Kasir Steam Kendaraan</h1>
+        <p>Sistem Penginputan & Transaksi Cuci Mobil / Motor</p>
+    </div>
+
+    <div class="container">
+        <!-- Form Transaksi -->
+        <div class="card">
+            <h2>Input Transaksi</h2>
+            <form id="transForm">
+                <div class="form-group">
+                    <label>Nama Pelanggan</label>
+                    <input type="text" id="customerName" placeholder="Contoh: Budi" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nomor Plat Kendaraan</label>
+                    <input type="text" id="plateNumber" placeholder="Contoh: B 1234 ABC" style="text-transform: uppercase;" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kategori Kendaraan</label>
+                    <select id="vehicleType" onchange="updateServices()">
+                        <option value="motor">Motor</option>
+                        <option value="mobil">Mobil</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Jenis Layanan</label>
+                    <select id="serviceType" onchange="calculateTotal()">
+                        <!-- Option diisi lewat Javascript -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Bayar (Rp)</label>
+                    <input type="number" id="payAmount" placeholder="Masukkan jumlah uang" oninput="calculateTotal()" required>
+                </div>
+
+                <div class="total-display" id="totalDisplay">Total: Rp 0</div>
+
+                <button type="submit" class="btn">Proses Transaksi</button>
+            </form>
+        </div>
+
+        <!-- Preview Struk Pembayaran -->
+        <div class="card">
+            <h2>Struk Pembayaran</h2>
+            <div id="receiptArea" class="receipt-box">
+                <div class="receipt-header">
+                    <h3>STEAM SEJAHTERA</h3>
+                    <p>Jl. Raya Steam No. 123</p>
+                    <p id="rDate">Tanggal: -</p>
+                </div>
+                <div class="receipt-row">
+                    <span>Pelanggan:</span>
+                    <span id="rName">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Plat Nomor:</span>
+                    <span id="rPlate">-</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Layanan:</span>
+                    <span id="rService">-</span>
+                </div>
+                <br>
+                <div class="receipt-row receipt-total">
+                    <span>Total Biaya:</span>
+                    <span id="rTotal">Rp 0</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Bayar:</span>
+                    <span id="rPay">Rp 0</span>
+                </div>
+                <div class="receipt-row">
+                    <span>Kembalian:</span>
+                    <span id="rChange">Rp 0</span>
+                </div>
+                <div class="receipt-header" style="margin-top: 15px; border-bottom: none;">
+                    <p>-- Terima Kasih --</p>
+                </div>
+            </div>
+
+            <button class="btn btn-print" onclick="window.print()">🖨️ Cetak Struk</button>
+        </div>
+    </div>
+
+    <script>
+        // Daftar layanan dan harga
+        const services = {
+            motor: [
+                { name: "Cuci Steam Motor Kecil (Mio, Beat)", price: 15000 },
+                { name: "Cuci Steam Motor Besar (NMAX, PCX, Sport)", price: 25000 },
+                { name: "Steam + Polish Body Motor", price: 35000 }
+            ],
+            mobil: [
+                { name: "Cuci Steam Body Mobil", price: 35000 },
+                { name: "Cuci Steam Body + Kolong Mobil", price: 50000 },
+                { name: "Cuci Komplit + Jamur Kaca", price: 80000 }
+            ]
+        };
+
+        const vehicleTypeSelect = document.getElementById('vehicleType');
+        const serviceTypeSelect = document.getElementById('serviceType');
+        const payAmountInput = document.getElementById('payAmount');
+        const totalDisplay = document.getElementById('totalDisplay');
+
+        // Mengisi dropdown layanan berdasarkan jenis kendaraan
+        function updateServices() {
+            const selectedType = vehicleTypeSelect.value;
+            serviceTypeSelect.innerHTML = '';
+
+            services[selectedType].forEach((service, index) => {
+                const option = document.createElement('option');
+                option.value = service.price;
+                option.dataset.name = service.name;
+                option.textContent = `${service.name} - Rp ${service.price.toLocaleString('id-ID')}`;
+                serviceTypeSelect.appendChild(option);
+            });
+
+            calculateTotal();
+        }
+
+        // Menghitung Total dan Tampilan
+        function calculateTotal() {
+            const selectedPrice = parseInt(serviceTypeSelect.value) || 0;
+            totalDisplay.textContent = `Total: Rp ${selectedPrice.toLocaleString('id-ID')}`;
+        }
+
+        // Format tanggal hari ini
+        function getFormattedDate() {
+            const now = new Date();
+            return now.toLocaleDateString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // Form Submit
+        document.getElementById('transForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('customerName').value;
+            const plate = document.getElementById('plateNumber').value.toUpperCase();
+            const servicePrice = parseInt(serviceTypeSelect.value);
+            const selectedOption = serviceTypeSelect.options[serviceTypeSelect.selectedIndex];
+            const serviceName = selectedOption.dataset.name;
+            const pay = parseInt(payAmountInput.value);
+
+            if (pay < servicePrice) {
+                alert('Uang pembayaran kurang!');
+                return;
+            }
+
+            const change = pay - servicePrice;
+
+            // Cetak ke tampilan Struk
+            document.getElementById('rDate').textContent = `Tanggal: ${getFormattedDate()}`;
+            document.getElementById('rName').textContent = name;
+            document.getElementById('rPlate').textContent = plate;
+            document.getElementById('rService').textContent = serviceName;
+            document.getElementById('rTotal').textContent = `Rp ${servicePrice.toLocaleString('id-ID')}`;
+            document.getElementById('rPay').textContent = `Rp ${pay.toLocaleString('id-ID')}`;
+            document.getElementById('rChange').textContent = `Rp ${change.toLocaleString('id-ID')}`;
+
+            alert('Transaksi Berhasil! Silakan cetak struk.');
+        });
+
+        // Load awal
+        updateServices();
+    </script>
+</body>
+</html>

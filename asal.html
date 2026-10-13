@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMESTATION // POS Rental PS Lengkap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .font-mono-price {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceipt, #printableReceipt * { visibility: visible; }
+            #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; color: black !important; background: white !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- NAVBAR HEADER -->
+    <header class="bg-slate-900/80 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+                    🎮
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight flex items-center gap-2">
+                        RENTAL PS TEGAR <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 font-semibold border border-indigo-500/30">POS TIMER v3.1</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Kasir & Countdown Billing PlayStation</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- RIWAYAT TRANSAKSI BUTTON -->
+                <button onclick="openHistoryModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-200 hover:border-indigo-500 transition">
+                    <i data-lucide="receipt" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Riwayat Transaksi</span>
+                </button>
+
+                <div class="hidden sm:block text-right border-l border-slate-800 pl-3">
+                    <p class="text-xs font-bold text-slate-200">Operator Kasir</p>
+                    <p class="text-[11px] text-emerald-400 font-medium">● Shift Aktif</p>
+                </div>
+                
+                <div class="font-mono-price text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-indigo-300" id="liveClock">
+                    --:--:-- WIB
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: CONSOLE STATIONS & F&B (8 COLS) -->
+        <section class="lg:col-span-8 space-y-6">
+            
+            <!-- SECTION 1: CONSOLE STATIONS -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-base flex items-center gap-2 text-indigo-300">
+                        <i data-lucide="gamepad-2" class="w-5 h-5 text-indigo-400"></i>
+                        <span>Status Station Console</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">Pilih durasi main atau tamatkan sesi jika selesai awal</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="stationGrid">
+                    <!-- Dynamic Station Cards -->
+                </div>
+            </div>
+
+            <!-- SECTION 2: F&B CATALOG -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-base flex items-center gap-2 text-indigo-300">
+                        <i data-lucide="cup-soda" class="w-5 h-5 text-indigo-400"></i>
+                        <span>Katalog Makanan & Minuman</span>
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="fnbGrid">
+                    <!-- Dynamic F&B Items -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: BILLING & PAYMENT (4 COLS) -->
+        <section class="lg:col-span-4 flex flex-col">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col h-full min-h-[550px] overflow-hidden">
+                
+                <!-- HEADER CART -->
+                <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/40">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 text-indigo-400"></i>
+                        <h2 class="font-bold text-base">Rincian Tagihan</h2>
+                    </div>
+                    <button onclick="clearBilling()" class="text-xs text-rose-400 hover:text-rose-300 transition font-medium">
+                        Reset F&B
+                    </button>
+                </div>
+
+                <!-- SELECTED STATION INFO -->
+                <div class="p-4 bg-indigo-950/30 border-b border-slate-800">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Target Station Dibayar:</label>
+                    <select id="activeStationSelect" onchange="switchActiveStation()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-indigo-300 focus:outline-none focus:border-indigo-500">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- BILLING ITEMS -->
+                <div id="billingItemsContainer" class="flex-grow overflow-y-auto p-4 space-y-3 divide-y divide-slate-800/60 max-h-[200px]">
+                    <!-- Items populated dynamically -->
+                </div>
+
+                <!-- METODE PEMBAYARAN -->
+                <div class="px-5 py-3 border-t border-slate-800 bg-slate-900/60 space-y-2">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase">Metode Pembayaran:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setPaymentMethod('CASH')" id="btnMethodCASH" class="py-2 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                            💵 Tunai (Cash)
+                        </button>
+                        <button onclick="setPaymentMethod('QRIS')" id="btnMethodQRIS" class="py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                            📱 QRIS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TOTAL & ACTION -->
+                <div class="p-5 border-t border-slate-800 bg-slate-900/90 space-y-4">
+                    <div class="space-y-1.5 text-xs text-slate-400 font-mono-price">
+                        <div class="flex justify-between">
+                            <span>Biaya Rental Paket:</span>
+                            <span id="rentalFeeText">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Biaya F&B:</span>
+                            <span id="fnbFeeText">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Bayar</span>
+                            <span id="grandTotalText" class="text-2xl font-extrabold font-mono-price text-emerald-400">Rp 0</span>
+                        </div>
+
+                        <button id="checkoutBtn" onclick="handleCheckoutClick()" disabled class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 font-bold text-sm shadow-lg transition flex items-center gap-2">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                            <span>Bayar & Struk</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: DISPLAY QRIS CODE -->
+    <div id="qrisModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+            <h3 class="font-bold text-base text-slate-100 flex items-center justify-center gap-2">
+                <i data-lucide="qr-code" class="w-5 h-5 text-indigo-400"></i>
+                <span>Pindai Pembayaran QRIS</span>
+            </h3>
+
+            <div class="bg-white p-3 rounded-xl inline-block border border-slate-200">
+                <img id="qrisCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LEVELUP_PLAYSTATION_RENTAL" alt="QRIS Code" class="w-48 h-48 mx-auto">
+            </div>
+
+            <div>
+                <p class="text-xs text-slate-400">Total Tagihan:</p>
+                <p id="qrisTotalAmount" class="text-2xl font-black font-mono-price text-emerald-400">Rp 0</p>
+                <p class="text-[10px] text-slate-500 mt-1">Gojek, OVO, Dana, ShopeePay, Mobile Banking</p>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeQrisModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-700 font-bold text-xs hover:bg-slate-800">Batal</button>
+                <button onclick="confirmQrisPayment()" class="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white">Sudah Bayar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RIWAYAT TRANSAKSI LOG -->
+    <div id="historyModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
+                <h3 class="font-bold text-base flex items-center gap-2 text-indigo-300">
+                    <i data-lucide="receipt" class="w-5 h-5 text-indigo-400"></i>
+                    <span>Riwayat Transaksi Penjualan</span>
+                </h3>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-indigo-950/40 border border-indigo-500/20 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-400">Total Omset Harian</span>
+                        <p id="totalRevenueText" class="text-2xl font-extrabold font-mono-price text-indigo-400">Rp 0</p>
+                    </div>
+                    <div class="bg-emerald-950/40 border border-emerald-500/20 p-4 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-400">Jumlah Transaksi</span>
+                        <p id="totalTrxCountText" class="text-2xl font-extrabold font-mono-price text-emerald-400">0</p>
+                    </div>
+                </div>
+
+                <div class="border border-slate-800 rounded-xl overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-800/80 text-slate-400 font-bold border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">ID TRX</th>
+                                <th class="p-3">Waktu</th>
+                                <th class="p-3">Station</th>
+                                <th class="p-3">Metode</th>
+                                <th class="p-3 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-slate-800 font-mono-price">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: INPUT DURASI PAKET MAINKAN -->
+    <div id="durationModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4 shadow-2xl">
+            <h3 class="font-bold text-base text-slate-100 flex items-center gap-2">
+                <i data-lucide="clock" class="w-5 h-5 text-indigo-400"></i>
+                <span id="modalStationTitle">Set Waktu Main</span>
+            </h3>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-2">Pilih Paket Durasi Quick:</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setQuickDuration(60)" class="py-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700 text-xs font-bold font-mono-price transition">1 Jam</button>
+                    <button onclick="setQuickDuration(120)" class="py-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700 text-xs font-bold font-mono-price transition">2 Jam</button>
+                    <button onclick="setQuickDuration(180)" class="py-2.5 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700 text-xs font-bold font-mono-price transition">3 Jam</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Atau Masukkan Menit Manual:</label>
+                <input type="number" id="customMinutesInput" placeholder="Contoh: 30 menit" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm font-bold font-mono-price focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeDurationModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-700 font-bold text-xs hover:bg-slate-800">Batal</button>
+                <button onclick="confirmStartSession()" class="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white">Mulai Main</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: STRUK PEMBAYARAN -->
+    <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white text-slate-900 border border-slate-200 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            
+            <div class="p-6 font-mono-price text-xs space-y-3" id="printableReceipt">
+                <div class="text-center space-y-1 pb-3 border-b border-dashed border-slate-300">
+                    <h2 class="font-black text-base uppercase">RENTAL PS TEGAR</h2>
+                    <p class="text-[11px] text-slate-600">Jl. Gaming Hub No. 12, Jakarta</p>
+                    <p class="text-[11px] text-slate-600">WA: 0812-3456-7890</p>
+                </div>
+
+                <div class="space-y-1 py-2 text-[11px] border-b border-dashed border-slate-300">
+                    <div class="flex justify-between"><span>No. TRX:</span><span id="recTrxId" class="font-bold">#TRX-000</span></div>
+                    <div class="flex justify-between"><span>Waktu:</span><span id="recTime">--/--/--</span></div>
+                    <div class="flex justify-between"><span>Station:</span><span id="recStation" class="font-bold text-indigo-600">PS5 - 01</span></div>
+                    <div class="flex justify-between"><span>Metode:</span><span id="recMethod" class="font-bold uppercase text-emerald-600">CASH</span></div>
+                    <div class="flex justify-between"><span>Status:</span><span class="font-bold text-emerald-600">LUNAS (DIBAYAR)</span></div>
+                </div>
+
+                <div id="recItemsList" class="space-y-2 py-2 border-b border-dashed border-slate-300">
+                    <!-- Dynamic receipt rows -->
+                </div>
+
+                <div class="space-y-1 pt-1 font-bold text-sm flex justify-between">
+                    <span>TOTAL LUNAS:</span>
+                    <span id="recTotal">Rp 0</span>
+                </div>
+
+                <div class="text-center text-[10px] text-slate-500 pt-4">
+                    <p>*** TERIMA KASIH ***</p>
+                    <p>Selamat Bermain!</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-100 border-t border-slate-200 flex gap-2">
+                <button onclick="closeReceiptModal()" class="w-1/2 py-2 rounded-xl border border-slate-300 font-bold text-xs hover:bg-slate-200">Tutup</button>
+                <button onclick="window.print()" class="w-1/2 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md">Cetak Struk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION LOGIC -->
+    <script>
+        const STATIONS = [
+            { id: 'ST-01', name: 'Station 01 (PS5)', type: 'PS5', pricePerHour: 20000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+            { id: 'ST-02', name: 'Station 02 (PS5)', type: 'PS5', pricePerHour: 20000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+            { id: 'ST-03', name: 'Station 03 (PS4)', type: 'PS4', pricePerHour: 15000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+            { id: 'ST-04', name: 'Station 04 (PS4)', type: 'PS4', pricePerHour: 15000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+            { id: 'ST-05', name: 'Station 05 (PS3)', type: 'PS3', pricePerHour: 10000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+            { id: 'ST-06', name: 'Station VIP (VR)', type: 'PS VR', pricePerHour: 30000, status: 'IDLE', isPaid: false, totalSeconds: 0, remainingSeconds: 0, fnb: [] },
+        ];
+
+        const FNB_ITEMS = [
+            { id: 'F01', name: 'Indomie Tanpa Telur', price: 9000, icon: '🍜' },
+            { id: 'F02', name: 'Indomie + Telur', price: 12000, icon: '🍳' },
+            { id: 'F03', name: 'Es Teh Manis', price: 5000, icon: '🥤' },
+            { id: 'F04', name: 'Kopi Hitam / Susu', price: 6000, icon: '☕' },
+            { id: 'F05', name: 'Air Mineral 600ml', price: 4000, icon: '💧' },
+            { id: 'F06', name: 'Kentang Goreng', price: 10000, icon: '🍟' },
+            { id: 'F07', name: 'Snack Chiki', price: 5000, icon: '🍿' },
+        ];
+
+        let selectedStationId = STATIONS[0].id;
+        let pendingStationId = null;
+        let selectedPayMethod = 'CASH';
+        let salesHistory = [];
+
+        window.onload = function() {
+            lucide.createIcons();
+            loadSalesHistory();
+            renderStations();
+            renderFnBCatalog();
+            populateStationSelect();
+            startCountdownTimer();
+        };
+
+        function setPaymentMethod(method) {
+            selectedPayMethod = method;
+            const btnCash = document.getElementById('btnMethodCASH');
+            const btnQris = document.getElementById('btnMethodQRIS');
+
+            if (method === 'CASH') {
+                btnCash.className = 'py-2 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 font-bold text-xs flex items-center justify-center gap-1.5 transition';
+                btnQris.className = 'py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 transition';
+            } else {
+                btnQris.className = 'py-2 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 font-bold text-xs flex items-center justify-center gap-1.5 transition';
+                btnCash.className = 'py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-1.5 transition';
+            }
+        }
+
+        function handleCheckoutClick() {
+            if (selectedPayMethod === 'QRIS') {
+                const st = STATIONS.find(s => s.id === selectedStationId);
+                const totalMinutes = st ? st.totalSeconds / 60 : 0;
+                const rentalFee = st ? Math.round((totalMinutes / 60) * st.pricePerHour) : 0;
+                const fnbFee = st && st.fnb ? st.fnb.reduce((sum, item) => sum + (item.price * item.qty), 0) : 0;
+                const total = rentalFee + fnbFee;
+
+                document.getElementById('qrisTotalAmount').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+                document.getElementById('qrisModal').classList.remove('hidden');
+            } else {
+                processPayment();
+            }
+        }
+
+        function closeQrisModal() {
+            document.getElementById('qrisModal').classList.add('hidden');
+        }
+
+        function confirmQrisPayment() {
+            closeQrisModal();
+            processPayment();
+        }
+
+        function renderStations() {
+            const grid = document.getElementById('stationGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            STATIONS.forEach(st => {
+                const isPlaying = st.status === 'PLAYING';
+                const isTimeout = st.status === 'TIMEOUT';
+
+                let statusBadge = `<span class="bg-slate-700 text-slate-400 text-xs font-bold px-2 py-0.5 rounded">○ STANDBY</span>`;
+                let cardBorder = 'bg-slate-800/50 border-slate-700/80';
+                
+                if (isPlaying) {
+                    const paidLabel = st.isPaid ? ' [LUNAS]' : '';
+                    statusBadge = `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-2 py-0.5 rounded animate-pulse">● PLAYING${paidLabel}</span>`;
+                    cardBorder = 'bg-indigo-950/40 border-indigo-500/80 shadow-lg shadow-indigo-500/10';
+                } else if (isTimeout) {
+                    statusBadge = `<span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold px-2 py-0.5 rounded animate-bounce">⚠️ WAKTU HABIS</span>`;
+                    cardBorder = 'bg-rose-950/40 border-rose-500/80 shadow-lg shadow-rose-500/20';
+                }
+
+                const totalMinutes = st.totalSeconds / 60;
+                const rentalPrice = Math.round((totalMinutes / 60) * st.pricePerHour);
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border transition relative overflow-hidden ${cardBorder}`;
+
+                let actionButtonHtml = '';
+                if (!isPlaying && !isTimeout) {
+                    actionButtonHtml = `<button onclick="openDurationModal('${st.id}')" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition">+ Set Waktu Main</button>`;
+                } else if (isPlaying) {
+                    actionButtonHtml = `
+                        <div class="grid grid-cols-2 gap-2 w-full">
+                            <button onclick="addExtraTime('${st.id}')" class="py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition">+ Waktu</button>
+                            <button onclick="finishSessionEarly('${st.id}')" class="py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition">⏹ Udahan</button>
+                        </div>
+                    `;
+                } else if (isTimeout) {
+                    actionButtonHtml = `<button onclick="resetStation('${st.id}')" class="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs transition">Bersihkan / Reset Stesen</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        ${statusBadge}
+                        <span class="text-[11px] font-mono-price text-slate-400">Rp ${st.pricePerHour.toLocaleString('id-ID')}/jam</span>
+                    </div>
+
+                    <h3 class="font-bold text-sm text-slate-100">${st.name}</h3>
+
+                    <div class="my-3 p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+                        <div class="font-mono-price text-lg font-bold ${isTimeout ? 'text-rose-400' : 'text-indigo-400'}">${formatTime(st.remainingSeconds)}</div>
+                        <div class="font-mono-price text-xs text-emerald-400 font-semibold">Total Paket: Rp ${rentalPrice.toLocaleString('id-ID')}</div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        ${actionButtonHtml}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderFnBCatalog() {
+            const grid = document.getElementById('fnbGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            FNB_ITEMS.forEach(item => {
+                const card = document.createElement('div');
+                card.onclick = () => addFnBToStation(item);
+                card.className = "bg-slate-800/40 border border-slate-700/60 hover:border-indigo-500 rounded-xl p-3 cursor-pointer transition text-center group";
+                card.innerHTML = `
+                    <div class="text-2xl mb-1 group-hover:scale-110 transition duration-200">${item.icon}</div>
+                    <h4 class="font-bold text-xs text-slate-200 truncate">${item.name}</h4>
+                    <p class="font-mono-price text-[11px] font-semibold text-emerald-400 mt-0.5">Rp ${item.price.toLocaleString('id-ID')}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openDurationModal(stationId) {
+            pendingStationId = stationId;
+            const st = STATIONS.find(s => s.id === stationId);
+            document.getElementById('modalStationTitle').innerText = `Set Waktu: ${st.name}`;
+            document.getElementById('customMinutesInput').value = '';
+            document.getElementById('durationModal').classList.remove('hidden');
+        }
+
+        function closeDurationModal() {
+            document.getElementById('durationModal').classList.add('hidden');
+            pendingStationId = null;
+        }
+
+        function setQuickDuration(minutes) {
+            document.getElementById('customMinutesInput').value = minutes;
+        }
+
+        function confirmStartSession() {
+            const minutes = parseInt(document.getElementById('customMinutesInput').value) || 0;
+            if (minutes <= 0) {
+                alert('Masukkan durasi menit yang valid!');
+                return;
+            }
+
+            const st = STATIONS.find(s => s.id === pendingStationId);
+            if (st) {
+                st.status = 'PLAYING';
+                st.isPaid = false;
+                st.totalSeconds = minutes * 60;
+                st.remainingSeconds = minutes * 60;
+                
+                selectedStationId = pendingStationId;
+                const select = document.getElementById('activeStationSelect');
+                if (select) select.value = pendingStationId;
+            }
+
+            closeDurationModal();
+            renderStations();
+            updateBillingUI();
+        }
+
+        function addExtraTime(stationId) {
+            const extra = prompt('Masukkan tambahan waktu dalam menit (contoh: 30):', '30');
+            const minutes = parseInt(extra) || 0;
+            if (minutes > 0) {
+                const st = STATIONS.find(s => s.id === stationId);
+                if (st) {
+                    st.totalSeconds += minutes * 60;
+                    st.remainingSeconds += minutes * 60;
+                    st.status = 'PLAYING';
+                    st.isPaid = false;
+                }
+                renderStations();
+                updateBillingUI();
+            }
+        }
+
+        // FUNGSI BARU: BERHENTI / UDAHAN AWAL WALAUPUN SUDAH BAYAR
+        function finishSessionEarly(stationId) {
+            const st = STATIONS.find(s => s.id === stationId);
+            if (!st) return;
+
+            if (confirm(`Pemain di ${st.name} mau udahan sekarang?`)) {
+                st.status = 'IDLE';
+                st.isPaid = false;
+                st.totalSeconds = 0;
+                st.remainingSeconds = 0;
+                st.fnb = [];
+
+                renderStations();
+                updateBillingUI();
+            }
+        }
+
+        function resetStation(stationId) {
+            const st = STATIONS.find(s => s.id === stationId);
+            if (st) {
+                st.status = 'IDLE';
+                st.isPaid = false;
+                st.totalSeconds = 0;
+                st.remainingSeconds = 0;
+                st.fnb = [];
+            }
+            renderStations();
+            updateBillingUI();
+        }
+
+        function populateStationSelect() {
+            const select = document.getElementById('activeStationSelect');
+            if (!select) return;
+            select.innerHTML = '';
+            STATIONS.forEach(st => {
+                const opt = document.createElement('option');
+                opt.value = st.id;
+                opt.innerText = st.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function switchActiveStation() {
+            const select = document.getElementById('activeStationSelect');
+            if (select) selectedStationId = select.value;
+            updateBillingUI();
+        }
+
+        function addFnBToStation(item) {
+            const st = STATIONS.find(s => s.id === selectedStationId);
+            if (!st) return;
+
+            const existing = st.fnb.find(f => f.id === item.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                st.fnb.push({ ...item, qty: 1 });
+            }
+            updateBillingUI();
+        }
+
+        function updateFnBQty(itemId, delta) {
+            const st = STATIONS.find(s => s.id === selectedStationId);
+            if (!st) return;
+
+            const item = st.fnb.find(f => f.id === itemId);
+            if (!item) return;
+
+            item.qty += delta;
+            if (item.qty <= 0) {
+                st.fnb = st.fnb.filter(f => f.id !== itemId);
+            }
+            updateBillingUI();
+        }
+
+        function updateBillingUI() {
+            const container = document.getElementById('billingItemsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const st = STATIONS.find(s => s.id === selectedStationId);
+            if (!st) return;
+
+            const totalMinutes = st.totalSeconds / 60;
+            const rentalFee = Math.round((totalMinutes / 60) * st.pricePerHour);
+
+            if (st.totalSeconds > 0) {
+                const rentalRow = document.createElement('div');
+                rentalRow.className = "pb-2 border-b border-slate-800";
+                rentalRow.innerHTML = `
+                    <div class="flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-indigo-300">Paket Main ${st.name}</p>
+                            <p class="text-[10px] text-slate-400 font-mono-price">Durasi Paket: ${totalMinutes} Menit</p>
+                        </div>
+                        <span class="font-mono-price font-bold text-emerald-400">Rp ${rentalFee.toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+                container.appendChild(rentalRow);
+            }
+
+            let fnbFee = 0;
+            if (st.fnb && st.fnb.length > 0) {
+                st.fnb.forEach(f => {
+                    const totalItem = f.price * f.qty;
+                    fnbFee += totalItem;
+
+                    const row = document.createElement('div');
+                    row.className = "pt-2 flex justify-between items-center text-xs";
+                    row.innerHTML = `
+                        <div class="flex-grow">
+                            <p class="font-semibold text-slate-200">${f.name}</p>
+                            <p class="text-[10px] text-slate-400 font-mono-price">Rp ${f.price.toLocaleString('id-ID')} × ${f.qty}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center border border-slate-700 rounded bg-slate-800">
+                                <button onclick="updateFnBQty('${f.id}', -1)" class="px-1.5 py-0.5 hover:bg-slate-700 font-bold">-</button>
+                                <span class="px-1.5 font-mono-price">${f.qty}</span>
+                                <button onclick="updateFnBQty('${f.id}', 1)" class="px-1.5 py-0.5 hover:bg-slate-700 font-bold">+</button>
+                            </div>
+                            <span class="font-mono-price font-bold text-xs w-16 text-right">Rp ${totalItem.toLocaleString('id-ID')}</span>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            const grandTotal = rentalFee + fnbFee;
+
+            document.getElementById('rentalFeeText').innerText = `Rp ${rentalFee.toLocaleString('id-ID')}`;
+            document.getElementById('fnbFeeText').innerText = `Rp ${fnbFee.toLocaleString('id-ID')}`;
+            document.getElementById('grandTotalText').innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
+            
+            document.getElementById('checkoutBtn').disabled = (grandTotal === 0 || st.isPaid);
+        }
+
+        function clearBilling() {
+            const st = STATIONS.find(s => s.id === selectedStationId);
+            if (st) {
+                st.fnb = [];
+            }
+            updateBillingUI();
+        }
+
+        function processPayment() {
+            const st = STATIONS.find(s => s.id === selectedStationId);
+            if (!st) return;
+
+            const totalMinutes = st.totalSeconds / 60;
+            const rentalFee = Math.round((totalMinutes / 60) * st.pricePerHour);
+            const fnbFee = st.fnb ? st.fnb.reduce((sum, item) => sum + (item.price * item.qty), 0) : 0;
+            const total = rentalFee + fnbFee;
+
+            if (total === 0) return;
+
+            const trxId = '#TRX-' + Math.floor(1000 + Math.random() * 9000);
+            const timeStr = new Date().toLocaleString('id-ID');
+
+            document.getElementById('recTrxId').innerText = trxId;
+            document.getElementById('recTime').innerText = timeStr;
+            document.getElementById('recStation').innerText = st.name;
+            document.getElementById('recMethod').innerText = selectedPayMethod;
+            document.getElementById('recTotal').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+
+            const list = document.getElementById('recItemsList');
+            list.innerHTML = '';
+
+            if (rentalFee > 0) {
+                list.innerHTML += `
+                    <div class="flex justify-between">
+                        <span>Paket ${totalMinutes} Menit (${st.type})</span>
+                        <span>Rp ${rentalFee.toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+            }
+
+            st.fnb.forEach(f => {
+                list.innerHTML += `
+                    <div class="flex justify-between">
+                        <span>${f.name} x${f.qty}</span>
+                        <span>Rp ${(f.price * f.qty).toLocaleString('id-ID')}</span>
+                    </div>
+                `;
+            });
+
+            salesHistory.unshift({
+                trxId: trxId,
+                time: timeStr,
+                station: st.name,
+                method: selectedPayMethod,
+                total: total
+            });
+            localStorage.setItem('levelup_sales_history', JSON.stringify(salesHistory));
+
+            st.isPaid = true;
+
+            renderStations();
+            updateBillingUI();
+
+            document.getElementById('receiptModal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
+        }
+
+        function loadSalesHistory() {
+            const saved = localStorage.getItem('levelup_sales_history');
+            if (saved) {
+                try {
+                    salesHistory = JSON.parse(saved);
+                } catch(e) {
+                    salesHistory = [];
+                }
+            }
+        }
+
+        function openHistoryModal() {
+            const totalRevenue = salesHistory.reduce((sum, item) => sum + item.total, 0);
+            document.getElementById('totalRevenueText').innerText = `Rp ${totalRevenue.toLocaleString('id-ID')}`;
+            document.getElementById('totalTrxCountText').innerText = salesHistory.length;
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (salesHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Belum ada data transaksi.</td></tr>`;
+            } else {
+                salesHistory.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-slate-200">${item.trxId}</td>
+                        <td class="p-3 text-slate-400">${item.time}</td>
+                        <td class="p-3 text-indigo-400 font-semibold">${item.station}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-emerald-400 border border-emerald-500/30 uppercase">${item.method}</span></td>
+                        <td class="p-3 text-right font-bold text-emerald-400">Rp ${item.total.toLocaleString('id-ID')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('historyModal').classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+        }
+
+        function startCountdownTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const clock = document.getElementById('liveClock');
+                if (clock) clock.innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+
+                let needsRender = false;
+
+                STATIONS.forEach(st => {
+                    if (st.status === 'PLAYING' && st.remainingSeconds > 0) {
+                        st.remainingSeconds--;
+                        needsRender = true;
+
+                        if (st.remainingSeconds === 0) {
+                            st.status = 'TIMEOUT';
+                        }
+                    }
+                });
+
+                if (needsRender) {
+                    renderStations();
+                    updateBillingUI();
+                }
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+    </script>
+</body>
+</html>

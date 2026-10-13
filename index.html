@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tegar ROOM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#07080b',
+                            dark: '#0e1117',
+                            card: '#141822',
+                            red: '#ff003c',
+                            crimson: '#990024',
+                            yellow: '#fcee0a',
+                            cyan: '#00f0ff',
+                            dim: '#1e2538'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #07080b;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Aggressive Glowing & Neon Shadows */
+        .glow-red {
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.5), inset 0 0 10px rgba(255, 0, 60, 0.2);
+        }
+        .glow-red-lg {
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.8), inset 0 0 15px rgba(255, 0, 60, 0.4);
+        }
+        .text-glow-red {
+            text-shadow: 0 0 10px #ff003c, 0 0 20px #ff003c;
+        }
+        .text-glow-cyan {
+            text-shadow: 0 0 8px #00f0ff;
+        }
+
+        /* Cut Corners & Hazard Styling */
+        .clip-corner {
+            clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+        }
+        .clip-corner-sm {
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        .hazard-bar {
+            background: repeating-linear-gradient(
+                -45deg,
+                #ff003c,
+                #ff003c 12px,
+                #07080b 12px,
+                #07080b 24px
+            );
+        }
+
+        .cyber-border {
+            border: 2px solid #ff003c;
+            position: relative;
+        }
+        .cyber-border::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 8px;
+            height: 8px;
+            background: #ff003c;
+        }
+        .cyber-border::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 8px;
+            height: 8px;
+            background: #ff003c;
+        }
+
+        /* CRT Scanline & Laser Overlay Effect */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Glitch Animation */
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+        .glitch-hover:hover {
+            animation: glitch 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+
+        /* Pulse Alert Animation */
+        @keyframes alertFlash {
+            0%, 100% { opacity: 1; background-color: rgba(255, 0, 60, 0.25); }
+            50% { opacity: 0.6; background-color: rgba(255, 0, 60, 0.7); }
+        }
+        .emergency-mode {
+            animation: alertFlash 0.8s infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07080b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff003c;
+            border-radius: 0px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fcee0a;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between">
+
+    <!-- Scanline Visual Overlay -->
+    <div class="fixed inset-0 scanlines z-40"></div>
+
+    <!-- Background Matrix / Cyber Canvas -->
+    <canvas id="cyberCanvas" class="fixed inset-0 z-0 opacity-40"></canvas>
+
+    <div class="relative z-10">
+        <!-- Top Hazard Stripe -->
+        <div class="h-2 hazard-bar w-full"></div>
+
+        <!-- Main Header -->
+        <header class="border-b-2 border-cyber-red bg-cyber-dark/90 backdrop-blur-md px-4 py-4 md:px-8">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Logo & Branding -->
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-cyber-red/20 border-2 border-cyber-red flex items-center justify-center text-cyber-red text-2xl font-black clip-corner glow-red">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl md:text-3xl font-black font-cyber tracking-wider text-white text-glow-red">
+                                Tegar <span class="text-cyber-red">//</span> ROOMTOUR
+                            </h1>
+                            <span class="bg-cyber-red/20 border border-cyber-red text-cyber-red text-xs px-2 py-0.5 font-mono font-bold uppercase tracking-widest animate-pulse">
+                                RESTRICTED
+                            </span>
+                        </div>
+                        <p class="text-xs font-mono text-gray-400 tracking-widest uppercase">
+                            SYSTEM ENCRYPTION LEVEL: <span class="text-cyber-cyan font-bold">AES-256 BIT</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Top Status Meter & Actions -->
+                <div class="flex flex-wrap items-center gap-4 text-xs font-mono">
+                    <!-- Audio Toggle -->
+                    <button id="soundToggleBtn" onclick="toggleAudio()" class="px-3 py-2 bg-cyber-card border border-cyber-red/50 text-gray-300 hover:text-cyber-red hover:border-cyber-red transition flex items-center gap-2">
+                        <i id="soundIcon" class="fa-solid fa-volume-high text-cyber-red"></i>
+                        <span id="soundText">SFX: ON</span>
+                    </button>
+
+                    <!-- Emergency Protocol Trigger -->
+                    <button onclick="toggleEmergencyMode()" class="px-3 py-2 bg-cyber-red/20 border border-cyber-red text-cyber-red font-bold hover:bg-cyber-red hover:text-black transition flex items-center gap-2 glitch-hover">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>EMERGENCY LOCK</span>
+                    </button>
+
+                    <!-- Clock & Threat Badge -->
+                    <div class="bg-cyber-black border border-gray-800 p-2 rounded text-right flex flex-col justify-center">
+                        <div class="text-cyber-cyan font-bold font-mono tracking-widest" id="liveClock">00:00:00 UTC</div>
+                        <div class="text-[10px] text-gray-400">THREAT: <span class="text-cyber-yellow font-bold">NOMINAL (DEFCON 4)</span></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-8">
+
+            <!-- Metrics Overview Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Stored Data Count -->
+                <div class="bg-cyber-card border-l-4 border-cyber-red p-4 clip-corner-sm hover:border-cyber-cyan transition-all">
+                    <div class="flex justify-between items-center text-gray-400 mb-1">
+                        <span class="text-xs font-mono tracking-widest">TOTAL DATA TERKUNCI</span>
+                        <i class="fa-solid fa-box-archive text-cyber-red text-lg"></i>
+                    </div>
+                    <div class="text-3xl font-black font-cyber text-white" id="statTotalItems">0</div>
+                    <div class="text-[11px] text-gray-500 font-mono mt-1">Item aktif di enkripsi</div>
+                </div>
+
+                <!-- Security Clearance -->
+                <div class="bg-cyber-card border-l-4 border-cyber-yellow p-4 clip-corner-sm">
+                    <div class="flex justify-between items-center text-gray-400 mb-1">
+                        <span class="text-xs font-mono tracking-widest">CLEARANCE LEVEL</span>
+                        <i class="fa-solid fa-user-shield text-cyber-yellow text-lg"></i>
+                    </div>
+                    <div class="text-2xl font-black font-cyber text-cyber-yellow">ALPHA-5</div>
+                    <div class="text-[11px] text-gray-500 font-mono mt-1">Akses Penuh Operator</div>
+                </div>
+
+                <!-- Memory Usage Simulated Meter -->
+                <div class="bg-cyber-card border-l-4 border-cyber-cyan p-4 clip-corner-sm">
+                    <div class="flex justify-between items-center text-gray-400 mb-1">
+                        <span class="text-xs font-mono tracking-widest">VAULT CAPACITY</span>
+                        <i class="fa-solid fa-microchip text-cyber-cyan text-lg"></i>
+                    </div>
+                    <div class="text-2xl font-black font-cyber text-cyber-cyan" id="statCapacityText">2.4%</div>
+                    <!-- Mini Progress Bar -->
+                    <div class="w-full bg-cyber-black h-2 mt-2 rounded overflow-hidden border border-cyber-cyan/30">
+                        <div id="statCapacityBar" class="bg-cyber-cyan h-full w-[2.4%] transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Vault Status -->
+                <div class="bg-cyber-card border-l-4 border-green-500 p-4 clip-corner-sm">
+                    <div class="flex justify-between items-center text-gray-400 mb-1">
+                        <span class="text-xs font-mono tracking-widest">FIREWALL STATUS</span>
+                        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                    </div>
+                    <div class="text-xl font-black font-cyber text-green-400">AKTIF / AMAN</div>
+                    <div class="text-[11px] text-gray-500 font-mono mt-1">Zero Breach Detected</div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                <!-- LEFT COLUMN: Form Input Data Penting -->
+                <section class="lg:col-span-5 bg-cyber-card border-2 border-cyber-red/80 p-6 clip-corner relative glow-red">
+                    <!-- Form Title Badge -->
+                    <div class="flex items-center justify-between pb-4 border-b border-cyber-red/40 mb-6">
+                        <h2 class="text-xl font-black font-cyber text-white flex items-center gap-3">
+                            <i class="fa-solid fa-key text-cyber-red"></i>
+                            TAMBAH DATA RAHASIA
+                        </h2>
+                        <span class="text-xs font-mono bg-cyber-red text-black font-bold px-2 py-0.5">INPUT MODE</span>
+                    </div>
+
+                    <form id="vaultForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <!-- Kategori Data -->
+                        <div>
+                            <label class="block text-xs font-mono text-gray-300 uppercase tracking-widest mb-1">
+                                Kategori Data <span class="text-cyber-red">*</span>
+                            </label>
+                            <select id="dataCategory" required class="w-full bg-cyber-black border border-cyber-red/60 text-white p-3 font-mono text-sm focus:border-cyber-cyan focus:outline-none transition">
+                                <option value="Sangat Rahasia">🔴 Sangat Rahasia (Top Secret)</option>
+                                <option value="Kata Sandi & Key">🔑 Kata Sandi & Digital Key</option>
+                                <option value="Dokumen Penting">📄 Dokumen Legal / Identitas</option>
+                                <option value="Rekening & Keuangan">💳 Rekening & Keuangan</option>
+                                <option value="Catatan Pribadi">📝 Catatan Strategis Pribadi</option>
+                            </select>
+                        </div>
+
+                        <!-- Judul Data -->
+                        <div>
+                            <label class="block text-xs font-mono text-gray-300 uppercase tracking-widest mb-1">
+                                Judul / Identifier <span class="text-cyber-red">*</span>
+                            </label>
+                            <input type="text" id="dataTitle" required placeholder="Contoh: PIN Vault Bank Utama / Token Server 01" 
+                                class="w-full bg-cyber-black border border-cyber-red/60 text-white p-3 font-mono text-sm focus:border-cyber-cyan focus:outline-none transition">
+                        </div>
+
+                        <!-- Priority Level -->
+                        <div>
+                            <label class="block text-xs font-mono text-gray-300 uppercase tracking-widest mb-1">
+                                Tingkat Prioritas Bahaya
+                            </label>
+                            <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                                <label class="border border-gray-700 bg-cyber-black p-2 text-center cursor-pointer hover:border-cyber-red flex items-center justify-center gap-1">
+                                    <input type="radio" name="priority" value="EXTREME" checked class="accent-cyber-red">
+                                    <span class="text-cyber-red font-bold">EXTREME</span>
+                                </label>
+                                <label class="border border-gray-700 bg-cyber-black p-2 text-center cursor-pointer hover:border-cyber-yellow flex items-center justify-center gap-1">
+                                    <input type="radio" name="priority" value="HIGH" class="accent-cyber-yellow">
+                                    <span class="text-cyber-yellow font-bold">HIGH</span>
+                                </label>
+                                <label class="border border-gray-700 bg-cyber-black p-2 text-center cursor-pointer hover:border-cyber-cyan flex items-center justify-center gap-1">
+                                    <input type="radio" name="priority" value="MEDIUM" class="accent-cyber-cyan">
+                                    <span class="text-cyber-cyan font-bold">MEDIUM</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Secret Data Content Area -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-mono text-gray-300 uppercase tracking-widest">
+                                    Isi Data Rahasia / Password <span class="text-cyber-red">*</span>
+                                </label>
+                                <button type="button" onclick="toggleSecretInputVisibility()" class="text-xs text-cyber-cyan hover:underline font-mono">
+                                    <i id="eyeInputIcon" class="fa-solid fa-eye-slash"></i> Tampilkan Teks
+                                </button>
+                            </div>
+                            <textarea id="dataSecret" required rows="4" placeholder="Tulis catatan penting, password, recovery key, atau data rahasia di sini..." 
+                                class="w-full bg-cyber-black border border-cyber-red/60 text-white p-3 font-mono text-sm focus:border-cyber-cyan focus:outline-none transition"></textarea>
+                        </div>
+
+                        <!-- Tags & Note -->
+                        <div>
+                            <label class="block text-xs font-mono text-gray-300 uppercase tracking-widest mb-1">
+                                Label / Tag Tambahan (Pisahkan dengan koma)
+                            </label>
+                            <input type="text" id="dataTags" placeholder="keuangan, server, privat, backup" 
+                                class="w-full bg-cyber-black border border-gray-800 text-white p-2.5 font-mono text-sm focus:border-cyber-cyan focus:outline-none">
+                        </div>
+
+                        <!-- AES Lock Simulation Badge -->
+                        <div class="flex items-center gap-2 p-2 bg-cyber-black border border-dashed border-gray-800 text-xs font-mono text-gray-400">
+                            <i class="fa-solid fa-lock text-cyber-red"></i>
+                            <span>Data otomatis dienkripsi lokal dengan kunci Master PIN Vault.</span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" 
+                            class="w-full bg-cyber-red hover:bg-red-600 text-black font-black font-cyber tracking-widest py-3 text-base uppercase transition transform hover:-translate-y-0.5 active:translate-y-0 clip-corner-sm flex items-center justify-center gap-2 shadow-lg shadow-cyber-red/30 glitch-hover">
+                            <i class="fa-solid fa-vault"></i>
+                            <span>KUNCI & SIMPAN KE VAULT</span>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- RIGHT COLUMN: Vault List & Search Controls -->
+                <section class="lg:col-span-7 space-y-4">
+
+                    <!-- Search & Filter Controls -->
+                    <div class="bg-cyber-card border border-cyber-red/40 p-4 flex flex-col md:flex-row gap-3 justify-between items-center">
+                        <!-- Search Box -->
+                        <div class="relative w-full md:w-1/2">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-cyber-red"></i>
+                            <input type="text" id="searchInput" oninput="renderVaultList()" placeholder="Cari data vault..." 
+                                class="w-full bg-cyber-black border border-gray-800 pl-9 pr-3 py-2 text-sm text-white font-mono focus:border-cyber-red focus:outline-none">
+                        </div>
+
+                        <!-- Category Filter -->
+                        <div class="w-full md:w-1/2 flex gap-2">
+                            <select id="filterCategory" onchange="renderVaultList()" class="w-full bg-cyber-black border border-gray-800 text-white px-3 py-2 text-sm font-mono focus:border-cyber-red focus:outline-none">
+                                <option value="ALL">-- SEMUA KATEGORI --</option>
+                                <option value="Sangat Rahasia">Sangat Rahasia</option>
+                                <option value="Kata Sandi & Key">Kata Sandi & Key</option>
+                                <option value="Dokumen Penting">Dokumen Penting</option>
+                                <option value="Rekening & Keuangan">Rekening & Keuangan</option>
+                                <option value="Catatan Pribadi">Catatan Pribadi</option>
+                            </select>
+
+                            <!-- Backup / Restore Actions -->
+                            <button onclick="exportVaultData()" title="Ekspor Data (JSON)" class="bg-cyber-black border border-gray-700 hover:border-cyber-cyan text-cyber-cyan p-2 font-mono text-xs flex items-center justify-center">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                            <label title="Impor Data (JSON)" class="bg-cyber-black border border-gray-700 hover:border-cyber-yellow text-cyber-yellow p-2 font-mono text-xs flex items-center justify-center cursor-pointer">
+                                <i class="fa-solid fa-upload"></i>
+                                <input type="file" id="importFileInput" onchange="importVaultData(event)" accept=".json" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Vault Items List Container -->
+                    <div id="vaultListContainer" class="space-y-4 max-h-[650px] overflow-y-auto pr-1">
+                        <!-- Dynamic items generated via JavaScript -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <footer class="relative z-10 border-t border-cyber-red/30 bg-cyber-black/90 py-4 px-6 text-center text-xs font-mono text-gray-500">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+            <div>
+                VAULT SECURITY SYSTEM v4.09 // CLASSIFIED LOCAL STORAGE ARCHITECTURE
+            </div>
+            <div class="text-cyber-red font-bold">
+                <i class="fa-solid fa-triangle-exclamation"></i> DATA TERPENJARA SECARA LOKAL PADA BROWSER ANDA
+            </div>
+        </div>
+    </footer>
+
+    <!-- PIN Verification Modal for Unlocking Secret Data -->
+    <div id="pinModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-cyber-card border-2 border-cyber-red w-full max-w-md p-6 clip-corner glow-red-lg text-center space-y-4 relative">
+            <button onclick="closePinModal()" class="absolute top-3 right-3 text-gray-500 hover:text-cyber-red">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="w-16 h-16 bg-cyber-red/20 border-2 border-cyber-red rounded-full flex items-center justify-center mx-auto text-cyber-red text-2xl animate-pulse">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-black font-cyber text-white">MASUKKAN PIN KEAMANAN</h3>
+                <p class="text-xs font-mono text-gray-400 mt-1" id="pinModalSubtitle">Verifikasi PIN untuk membuka data terenkripsi ini.</p>
+            </div>
+
+            <div class="space-y-3">
+                <input type="password" id="pinInput" maxlength="6" placeholder="• • • • • •" 
+                    class="w-full bg-cyber-black border-2 border-cyber-red text-center text-2xl tracking-[0.5em] font-mono text-cyber-yellow py-3 focus:outline-none focus:border-cyber-cyan">
+                <p class="text-[11px] font-mono text-gray-500">Default Master PIN: <span class="text-cyber-cyan font-bold">123456</span> (Dapat diganti di setting)</p>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="verifyPinAndExecute()" class="w-full bg-cyber-red hover:bg-red-600 text-black font-bold font-cyber py-3 uppercase tracking-widest clip-corner-sm">
+                    BUKA DATA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-cyber-black border-2 border-cyber-cyan text-white px-5 py-3 font-mono text-sm clip-corner-sm shadow-xl flex items-center gap-3">
+            <i class="fa-solid fa-terminal text-cyber-cyan text-lg"></i>
+            <span id="toastMessage">Sistem terkonfirmasi.</span>
+        </div>
+    </div>
+
+    <script>
+        /* -------------------------------------------------------------
+           1. CANVAS CYBER BACKGROUND (DYNAMIC PARTICLES & LASER GRID)
+           ------------------------------------------------------------- */
+        const canvas = document.getElementById('cyberCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const gridParticles = [];
+        const maxParticles = 60;
+
+        for (let i = 0; i < maxParticles; i++) {
+            gridParticles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 1.2,
+                vy: (Math.random() - 0.5) * 1.2,
+                size: Math.random() * 2 + 1,
+                color: Math.random() > 0.3 ? '#ff003c' : '#00f0ff'
+            });
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Subtle Grid
+            ctx.strokeStyle = 'rgba(255, 0, 60, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Draw Floating Particles & Connectors
+            for (let i = 0; i < gridParticles.length; i++) {
+                let p = gridParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Connect nearby particles
+                for (let j = i + 1; j < gridParticles.length; j++) {
+                    let p2 = gridParticles[j];
+                    let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 100) {
+                        ctx.strokeStyle = `rgba(255, 0, 60, ${1 - dist / 100})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(drawCanvas);
+        }
+        drawCanvas();
+
+
+        /* -------------------------------------------------------------
+           2. WEB AUDIO SYNTHESIZER (SOUND EFFECTS - NO EXTERNAL ASSETS)
+           ------------------------------------------------------------- */
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'unlock') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'lock') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'alarm') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(900, now);
+                    osc.frequency.linearRampToValueAtTime(400, now + 0.3);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-cyber-red';
+                text.innerText = 'SFX: ON';
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-gray-500';
+                text.innerText = 'SFX: OFF';
+            }
+        }
+
+
+        /* -------------------------------------------------------------
+           3. APPLICATION STATE & STORAGE HANDLER
+           ------------------------------------------------------------- */
+        const STORAGE_KEY = 'VAULT_CLASSIFIED_DATA_V1';
+        const MASTER_PIN = '123456';
+
+        let vaultData = [];
+        let activeTargetId = null;
+        let activeActionType = null; // 'VIEW' or 'DELETE'
+        let isEmergency = false;
+
+        // Load data on startup
+        window.onload = function() {
+            loadVaultData();
+            startLiveClock();
+            renderVaultList();
+            updateMetrics();
+        };
+
+        function loadVaultData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try {
+                    vaultData = JSON.parse(raw);
+                } catch (e) {
+                    vaultData = [];
+                }
+            } else {
+                // Initial Default Sample Data
+                vaultData = [
+                    {
+                        id: 'V-8901',
+                        category: 'Sangat Rahasia',
+                        title: 'Master Recovery Token Key',
+                        secret: 'SEC-88902-X992-ALPHA-CLASSIFIED-RECOVERY-PHRASE',
+                        priority: 'EXTREME',
+                        tags: ['backup', 'master', 'key'],
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'V-4420',
+                        category: 'Kata Sandi & Key',
+                        title: 'Kredensial Server Database Utama',
+                        secret: 'db_admin // P@ssw0rdGanas2026!#',
+                        priority: 'HIGH',
+                        tags: ['database', 'server'],
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                saveVaultData();
+            }
+        }
+
+        function saveVaultData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(vaultData));
+            updateMetrics();
+        }
+
+
+        /* -------------------------------------------------------------
+           4. FORM SUBMISSION & DATA CREATION
+           ------------------------------------------------------------- */
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            playSound('lock');
+
+            const category = document.getElementById('dataCategory').value;
+            const title = document.getElementById('dataTitle').value.trim();
+            const secret = document.getElementById('dataSecret').value;
+            const priority = document.querySelector('input[name="priority"]:checked').value;
+            const rawTags = document.getElementById('dataTags').value;
+            const tags = rawTags ? rawTags.split(',').map(t => t.trim()) : [];
+
+            const newItem = {
+                id: 'V-' + Math.floor(1000 + Math.random() * 9000),
+                category,
+                title,
+                secret,
+                priority,
+                tags,
+                createdAt: new Date().toISOString()
+            };
+
+            vaultData.unshift(newItem);
+            saveVaultData();
+            renderVaultList();
+
+            // Reset Form
+            document.getElementById('vaultForm').reset();
+            showToast('DATA BERHASIL DIKUNCI DAN DISIMPAN KE VAULT');
+        }
+
+        function toggleSecretInputVisibility() {
+            const input = document.getElementById('dataSecret');
+            const icon = document.getElementById('eyeInputIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye-slash';
+            }
+        }
+
+
+        /* -------------------------------------------------------------
+           5. RENDER VAULT DATA CARDS & FILTERS
+           ------------------------------------------------------------- */
+        function renderVaultList() {
+            const container = document.getElementById('vaultListContainer');
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            const filterCategory = document.getElementById('filterCategory').value;
+
+            const filtered = vaultData.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchKeyword) || 
+                                      item.category.toLowerCase().includes(searchKeyword) ||
+                                      item.tags.some(t => t.toLowerCase().includes(searchKeyword));
+                const matchesCat = filterCategory === 'ALL' || item.category === filterCategory;
+                return matchesSearch && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-cyber-card border border-dashed border-cyber-red/50 p-8 text-center text-gray-500 font-mono clip-corner">
+                        <i class="fa-solid fa-folder-open text-4xl text-cyber-red mb-3"></i>
+                        <p class="text-sm">TIDAK ADA DATA VAULT DITEMUKAN</p>
+                        <p class="text-xs text-gray-600 mt-1">Tambahkan data rahasia baru melalui formulir di sebelah kiri.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                // Priority Colors
+                let pBg = 'border-cyber-cyan text-cyber-cyan';
+                if (item.priority === 'EXTREME') pBg = 'border-cyber-red text-cyber-red';
+                if (item.priority === 'HIGH') pBg = 'border-cyber-yellow text-cyber-yellow';
+
+                // Format Masked Secret Text
+                const maskedSecret = '• • • • • • • • • • • • • • •';
+
+                return `
+                    <div class="bg-cyber-card border-l-4 ${item.priority === 'EXTREME' ? 'border-cyber-red' : item.priority === 'HIGH' ? 'border-cyber-yellow' : 'border-cyber-cyan'} border-r border-t border-b border-gray-800 p-5 clip-corner-sm hover:border-cyber-red transition space-y-3 relative group">
+                        
+                        <!-- Card Header -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-mono px-2 py-0.5 bg-cyber-black border ${pBg} font-bold tracking-widest">
+                                    ${item.priority}
+                                </span>
+                                <span class="text-xs font-mono text-gray-400">ID: ${item.id}</span>
+                            </div>
+                            <span class="text-xs font-mono text-gray-400">${item.category}</span>
+                        </div>
+
+                        <!-- Card Title -->
+                        <h3 class="text-lg font-bold font-cyber text-white tracking-wide">${escapeHtml(item.title)}</h3>
+
+                        <!-- Secret Preview / Hidden Area -->
+                        <div class="bg-cyber-black border border-gray-800 p-3 flex items-center justify-between font-mono text-sm">
+                            <div id="secret-text-${item.id}" class="text-gray-500 truncate select-none">
+                                ${maskedSecret}
+                            </div>
+                            <span class="text-[10px] text-cyber-cyan font-bold uppercase tracking-widest border border-cyber-cyan/30 px-1.5 py-0.5">
+                                TERENKRIPSI
+                            </span>
+                        </div>
+
+                        <!-- Tags -->
+                        ${item.tags.length > 0 ? `
+                            <div class="flex flex-wrap gap-1">
+                                ${item.tags.map(tag => `
+                                    <span class="text-[10px] font-mono bg-cyber-black text-gray-400 px-2 py-0.5 border border-gray-800">
+                                        #${escapeHtml(tag)}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <!-- Actions Bar -->
+                        <div class="pt-2 border-t border-gray-800/80 flex items-center justify-between gap-2">
+                            <div class="text-[10px] font-mono text-gray-500">
+                                Dibuat: ${new Date(item.createdAt).toLocaleDateString('id-ID')}
+                            </div>
+
+                            <div class="flex gap-2 font-mono text-xs">
+                                <!-- Unlock/Reveal Button -->
+                                <button onclick="requestUnlockData('${item.id}', 'VIEW')" class="bg-cyber-black hover:bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan px-3 py-1 flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-unlock"></i>
+                                    <span>LIHAT</span>
+                                </button>
+
+                                <!-- Copy Secret -->
+                                <button onclick="requestUnlockData('${item.id}', 'COPY')" class="bg-cyber-black hover:bg-cyber-yellow/20 border border-cyber-yellow text-cyber-yellow px-3 py-1 flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-copy"></i>
+                                    <span>SALIN</span>
+                                </button>
+
+                                <!-- Delete -->
+                                <button onclick="requestUnlockData('${item.id}', 'DELETE')" class="bg-cyber-black hover:bg-cyber-red/20 border border-cyber-red text-cyber-red px-3 py-1 flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        /* -------------------------------------------------------------
+           6. SECURITY PIN VERIFICATION & ACTIONS
+           ------------------------------------------------------------- */
+        function requestUnlockData(id, action) {
+            playSound('click');
+            activeTargetId = id;
+            activeActionType = action;
+
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinModal').classList.remove('hidden');
+            document.getElementById('pinInput').focus();
+        }
+
+        function closePinModal() {
+            playSound('click');
+            document.getElementById('pinModal').classList.add('hidden');
+            activeTargetId = null;
+            activeActionType = null;
+        }
+
+        function verifyPinAndExecute() {
+            const inputPin = document.getElementById('pinInput').value;
+
+            if (inputPin === MASTER_PIN) {
+                playSound('unlock');
+                const targetItem = vaultData.find(i => i.id === activeTargetId);
+
+                if (targetItem) {
+                    if (activeActionType === 'VIEW') {
+                        const elem = document.getElementById(`secret-text-${targetItem.id}`);
+                        if (elem) {
+                            elem.innerText = targetItem.secret;
+                            elem.className = 'text-cyber-yellow font-bold text-base select-all break-all';
+                            showToast('OTORISASI DISETUJUAI: DATA TERBUKA');
+                        }
+                    } else if (activeActionType === 'COPY') {
+                        copyToClipboard(targetItem.secret);
+                        showToast('DATA TERENKRIPSI DISALIN KE CLIPBOARD');
+                    } else if (activeActionType === 'DELETE') {
+                        vaultData = vaultData.filter(i => i.id !== activeTargetId);
+                        saveVaultData();
+                        renderVaultList();
+                        showToast('DATA HAPUS DARI VAULT TERKONFIRMASI');
+                    }
+                }
+                closePinModal();
+            } else {
+                playSound('alarm');
+                showToast('PIN SALAH! OTORISASI DITOLAK!');
+                const input = document.getElementById('pinInput');
+                input.classList.add('animate-bounce');
+                setTimeout(() => input.classList.remove('animate-bounce'), 1000);
+            }
+        }
+
+
+        /* -------------------------------------------------------------
+           7. UTILITY FUNCTIONS (EXPORT, IMPORT, EMERGENCY, CLOCK)
+           ------------------------------------------------------------- */
+        function copyToClipboard(text) {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+        }
+
+        function exportVaultData() {
+            playSound('click');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vaultData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `VAULT_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('BACKUP DATA TELEPORTASI JSON TERPROSES');
+        }
+
+        function importVaultData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        vaultData = imported;
+                        saveVaultData();
+                        renderVaultList();
+                        playSound('unlock');
+                        showToast('IMPOR BACKUP VAULT BERHASIL');
+                    } else {
+                        showToast('FORMAT FILE BACKUP INVALID');
+                    }
+                } catch (err) {
+                    showToast('GAGAL MENGIMPOR FILE DATA');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleEmergencyMode() {
+            isEmergency = !isEmergency;
+            playSound('alarm');
+
+            if (isEmergency) {
+                document.body.classList.add('emergency-mode');
+                showToast('🚨 EMERGENCY LOCK SYSTEM ACTIVATED!');
+            } else {
+                document.body.classList.remove('emergency-mode');
+                showToast('EMERGENCY LOCK DEACTIVATED');
+            }
+        }
+
+        function updateMetrics() {
+            document.getElementById('statTotalItems').innerText = vaultData.length;
+            
+            // Capacity estimation
+            const totalBytes = new Blob([JSON.stringify(vaultData)]).size;
+            const percentage = Math.min((totalBytes / 10000) * 100, 100).toFixed(1);
+            
+            document.getElementById('statCapacityText').innerText = `${percentage}%`;
+            document.getElementById('statCapacityBar').style.width = `${percentage}%`;
+        }
+
+        function startLiveClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('liveClock').innerText = now.toUTCString().split(' ')[4] + ' UTC';
+            }, 1000);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
